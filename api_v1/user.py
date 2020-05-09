@@ -1,35 +1,38 @@
 from flask import jsonify, request
+from flask_jwt import jwt_required
 
 from model import Fcuser, db
 from . import api
 
+@api.route('/users', methods=['POST'])
+def usersPost():
+    data = request.get_json()
+    userid = data.get('userid')
+    username = data.get('username')
+    password = data.get('password')
+    re_password = data.get('re-password')
 
-@api.route('/users', methods=['GET', 'POST'])
+    if not (userid and username and password and re_password):
+        return jsonify({'error': 'No argument'}), 400
+
+    if password != re_password:
+        return jsonify({'error': 'Wrong password'}), 400
+
+    fcuser = Fcuser()
+
+    fcuser.userid = userid
+    fcuser.username = username
+    fcuser.password = password
+
+    db.session.add(fcuser)
+    db.session.commit()
+
+    return jsonify(), 201
+
+
+@api.route('/users', methods=['GET'])
+@jwt_required()
 def users():
-    if request.method == 'POST':
-        data = request.get_json()
-        userid = data.get('userid')
-        username = data.get('username')
-        password = data.get('password')
-        re_password = data.get('re-password')
-
-        if not (userid and username and password and re_password):
-            return jsonify({'error': 'No argument'}), 400
-
-        if password != re_password:
-            return jsonify({'error': 'Wrong password'}), 400
-
-        fcuser = Fcuser()
-
-        fcuser.userid = userid
-        fcuser.username = username
-        fcuser.password = password
-
-        db.session.add(fcuser)
-        db.session.commit()
-
-        return jsonify(), 201
-
     users = Fcuser.query.all()
 
     return jsonify([user.serialize for user in users])
