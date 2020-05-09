@@ -11,3 +11,12 @@ class Fcuser(db.Model):
 
     userid = db.Column(db.String(32))
     username = db.Column(db.String(8))
+
+    @property
+    def serialize(self):
+        return {
+            'id': self.id,
+            'password': self.password,
+            'userid': self.userid,
+            'username': self.username,
+        }
